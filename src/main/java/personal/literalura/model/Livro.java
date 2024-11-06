@@ -2,10 +2,30 @@ package personal.literalura.model;
 
 
 public class Livro {
+    private Long id;
     private String titulo;
     private Autor autor;
     private String idioma; // Fazer Enum?
     private Integer numeroDeDownloads;
+
+    public Livro(){}
+
+    public Livro(DadosLivro dadosLivro){
+        this.id = dadosLivro.id();
+        this.titulo = dadosLivro.titulo();
+        this.autor = new Autor(dadosLivro.autor().get(0));
+        this.idioma = dadosLivro.idioma().get(0);
+        this.numeroDeDownloads = dadosLivro.numeroDeDownloads();
+    }
+
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getTitulo() {
         return titulo;
@@ -41,8 +61,10 @@ public class Livro {
 
     @Override
     public String toString() {
-        return titulo + ", de " + autor
+        return "Código: " + id + "\n"
+                + titulo + ", de " + autor
                 + "\nIdioma: " + idioma
-                + " - Nº de downloads:" + numeroDeDownloads;
+                + " - Nº de downloads: "
+            + numeroDeDownloads + "\n";
     }
 }
