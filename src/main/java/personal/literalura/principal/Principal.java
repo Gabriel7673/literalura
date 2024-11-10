@@ -1,8 +1,10 @@
 package personal.literalura.principal;
 
+import personal.literalura.model.Autor;
 import personal.literalura.model.DadosGutendex;
-import personal.literalura.model.DadosLivro;
 import personal.literalura.model.Livro;
+import personal.literalura.repository.AutorRepository;
+import personal.literalura.repository.LivroRepository;
 import personal.literalura.service.ConsumoAPI;
 import personal.literalura.service.ConverteDados;
 
@@ -17,6 +19,15 @@ public class Principal {
     private Scanner leitura = new Scanner(System.in);
     private ConsumoAPI consumoAPI = new ConsumoAPI();
     private ConverteDados converteDados = new ConverteDados();
+    private LivroRepository livroRepository;
+    private AutorRepository autorRepository;
+
+
+    public Principal(){}
+
+    public Principal(LivroRepository repositorio){
+        this.livroRepository = repositorio;
+    }
 
     public void exibeMenu(){
         int opcao;
@@ -41,6 +52,18 @@ public class Principal {
                 case 1:
                     buscarLivro();
                     break;
+                case 2:
+                    listarLivros();
+                    break;
+                case 3:
+                    listarAutores();
+                    break;
+                case 4:
+                    listaAutoresVivosEmAno();
+                    break;
+                case 5:
+                    listarLivrosEmIdioma();
+                    break;
                 default:
                     break;
             }
@@ -49,18 +72,24 @@ public class Principal {
 
     }
 
+    private List<Livro> getDados(String endereco){
+        var json = consumoAPI.obterDados(endereco);
+
+        // REFATORAR !!!
+        DadosGutendex dados = converteDados.obterDados(json, DadosGutendex.class);
+        return dados.listaDeLivros().stream()
+                .map(l -> new Livro(l))
+                .collect(Collectors.toList());
+    }
+
     private void buscarLivro() {
         System.out.println("Digite um trecho do livro ou do autor desejado: ");
         var busca = leitura.nextLine();
         var endereco = BASE_URL + "search=" + busca.replace(" ", "%20");
-        var json = consumoAPI.obterDados(endereco);
 
 
-        // REFATORAR !!!
-        DadosGutendex dados = converteDados.obterDados(json, DadosGutendex.class);
-        List<Livro> livrosBuscados = dados.listaDeLivros().stream()
-                .map(l -> new Livro(l))
-                .collect(Collectors.toList());
+
+        List<Livro> livrosBuscados = getDados(endereco);
 
         System.out.println("Resultados: ");
         livrosBuscados.forEach(System.out::println);
@@ -78,9 +107,42 @@ public class Principal {
         // E se for null?
         System.out.println(livro.toString());
 
-        // repositorio.save()
-
+        // livroRepository.save()
 
     }
 
+
+    private void listarLivros() {
+        List<Livro> livros = livroRepository.findAll();
+        livros.forEach(System.out::println);
+    }
+
+    private void listarAutores(){
+        List<Autor> autores = autorRepository.findAll();
+        autores.forEach(System.out::println);
+    }
+
+    private void listaAutoresVivosEmAno(){
+        System.out.println("Digite o ano desejado: ");
+        var ano = leitura.nextInt();
+        leitura.nextLine();
+
+        List<Autor> autorList = autorRepository.findAutoresVivosEmAno(ano);
+        autorList.forEach(System.out::println);
+    }
+
+    private void listarLivrosEmIdioma(){
+        String idiomas = """
+                
+                en - inglês
+                pt - português
+                """;
+
+        System.out.println(idiomas);
+        System.out.println("Digite o idioma desejado: ");
+        var idioma = leitura.nextLine();
+
+        List<Livro> livrosEmIdioma = livroRepository.findLivrosEmIdioma(idioma);
+        livrosEmIdioma.forEach(System.out::println);
+    }
 }

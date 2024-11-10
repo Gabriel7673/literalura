@@ -1,9 +1,20 @@
 package personal.literalura.model;
 
+import jakarta.persistence.*;
+import personal.literalura.repository.AutorRepository;
 
+import java.util.Optional;
+
+@Entity
+@Table(name = "livros")
 public class Livro {
+    @Id
     private Long id;
     private String titulo;
+
+    //@OneToOne(mappedBy = "autores", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "autor_id")
     private Autor autor;
     private String idioma; // Fazer Enum?
     private Integer numeroDeDownloads;
@@ -13,7 +24,23 @@ public class Livro {
     public Livro(DadosLivro dadosLivro){
         this.id = dadosLivro.id();
         this.titulo = dadosLivro.titulo();
-        this.autor = new Autor(dadosLivro.autor().get(0));
+        // CHECAR SE O AUTOR JÁ ESTÁ NA TABELA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        AutorRepository autorRepository = null;
+        Optional<Autor> autorExistente = autorRepository.findByNome(dadosLivro.autor().get(0).nome());
+
+        //Optional.ofNullable(this.autor) = autorExistente;
+        this.autor = autorExistente.orElseGet(() -> new Autor(dadosLivro.autor().get(0)));
+//        if (autorExistente.isPresent()) {
+//            //Optional.ofNullable(this.autor) = autorExistente;
+//            this.autor = autorExistente.get();
+//        } else {
+//            this.autor = new Autor(dadosLivro.autor().get(0));
+//        }
+
+
+        //this.autor = new Autor(dadosLivro.autor().get(0));
+        //this.autor = new Autor(dadosLivro.autor().get(0), this);
         this.idioma = dadosLivro.idioma().get(0);
         this.numeroDeDownloads = dadosLivro.numeroDeDownloads();
     }
@@ -62,7 +89,7 @@ public class Livro {
     @Override
     public String toString() {
         return "Código: " + id + "\n"
-                + titulo + ", de " + autor
+                + titulo + ", de " + autor.getNome()
                 + "\nIdioma: " + idioma
                 + " - Nº de downloads: "
             + numeroDeDownloads + "\n";
