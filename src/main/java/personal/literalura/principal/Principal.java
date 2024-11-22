@@ -1,5 +1,6 @@
 package personal.literalura.principal;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import personal.literalura.model.Autor;
 import personal.literalura.model.DadosGutendex;
 import personal.literalura.model.Livro;
@@ -9,6 +10,8 @@ import personal.literalura.service.ConsumoAPI;
 import personal.literalura.service.ConverteDados;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
@@ -19,14 +22,13 @@ public class Principal {
     private Scanner leitura = new Scanner(System.in);
     private ConsumoAPI consumoAPI = new ConsumoAPI();
     private ConverteDados converteDados = new ConverteDados();
+
     private LivroRepository livroRepository;
     private AutorRepository autorRepository;
 
-
-    public Principal(){}
-
-    public Principal(LivroRepository repositorio){
-        this.livroRepository = repositorio;
+    public Principal(LivroRepository livroRepository, AutorRepository autorRepository) {
+        this.livroRepository = livroRepository;
+        this.autorRepository = autorRepository;
     }
 
     public void exibeMenu(){
@@ -37,6 +39,8 @@ public class Principal {
                 3) Listar autores registrados
                 4) Listar autores vivos em dado ano
                 5) Listar livros em um dado idioma
+                6) Listar quantidade de livros por idioma
+                7) Zerar
                 0) Sair
                 Opção: """;
 
@@ -64,6 +68,12 @@ public class Principal {
                 case 5:
                     listarLivrosEmIdioma();
                     break;
+                case 6:
+                    listarQuantidadeDeLivrosPorIdioma();
+                    break;
+                case 7:
+                    apagar();
+                    break;
                 default:
                     break;
             }
@@ -72,13 +82,20 @@ public class Principal {
 
     }
 
+
+    // Excluir
+    private void apagar(){
+        autorRepository.deleteAll();
+        livroRepository.deleteAll();
+    }
+
     private List<Livro> getDados(String endereco){
         var json = consumoAPI.obterDados(endereco);
 
         // REFATORAR !!!
         DadosGutendex dados = converteDados.obterDados(json, DadosGutendex.class);
         return dados.listaDeLivros().stream()
-                .map(l -> new Livro(l))
+                .map(l -> new Livro(l, autorRepository))
                 .collect(Collectors.toList());
     }
 
@@ -86,8 +103,6 @@ public class Principal {
         System.out.println("Digite um trecho do livro ou do autor desejado: ");
         var busca = leitura.nextLine();
         var endereco = BASE_URL + "search=" + busca.replace(" ", "%20");
-
-
 
         List<Livro> livrosBuscados = getDados(endereco);
 
@@ -99,18 +114,21 @@ public class Principal {
         var codigo = leitura.nextInt();
         leitura.nextLine();
 
-        Livro livro = livrosBuscados.stream().
-                filter(l -> l.getId()==codigo)
+        Livro livro = livrosBuscados.stream()
+                .filter(l -> l.getId()==codigo)
                 .findFirst()
                 .orElse(null);
 
         // E se for null?
-        System.out.println(livro.toString());
-
-        // livroRepository.save()
+        if (livro == null) {
+            System.out.println("Livro não encontrado.");
+        } else {
+            autorRepository.save(livro.getAutor());
+            livroRepository.save(livro);
+            System.out.println("Livro salvo com sucesso.");
+        }
 
     }
-
 
     private void listarLivros() {
         List<Livro> livros = livroRepository.findAll();
@@ -144,5 +162,14 @@ public class Principal {
 
         List<Livro> livrosEmIdioma = livroRepository.findLivrosEmIdioma(idioma);
         livrosEmIdioma.forEach(System.out::println);
+    }
+
+    private void listarQuantidadeDeLivrosPorIdioma(){
+        List<Object[]> list = livroRepository.findQuantidadeDeLivrosPorIdioma();
+        list.forEach(arr -> {
+            String idioma = (String) arr[0];
+            Long quantidade = (Long) arr[1];
+            System.out.println("Idioma: " + idioma + ", Quantidade: " + quantidade);
+        });
     }
 }
