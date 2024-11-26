@@ -9,10 +9,7 @@ import personal.literalura.repository.LivroRepository;
 import personal.literalura.service.ConsumoAPI;
 import personal.literalura.service.ConverteDados;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Principal {
@@ -34,6 +31,11 @@ public class Principal {
     public void exibeMenu(){
         int opcao;
         String menu = """
+                
+                
+                -----------------------------------------------
+                                     MENU
+                -----------------------------------------------
                 1) Pesquisar livro
                 2) Listar livros registrados
                 3) Listar autores registrados
@@ -44,44 +46,48 @@ public class Principal {
                 0) Sair
                 Opção: """;
 
-        do {
-            System.out.println(menu);
-            opcao = leitura.nextInt();
+
+        try {
+            do {
+                System.out.println(menu);
+                opcao = leitura.nextInt();
+                leitura.nextLine();
+                switch (opcao){
+                    case 0:
+                        System.out.println("Encerrando");
+                        break;
+                    case 1:
+                        buscarLivro();
+                        break;
+                    case 2:
+                        listarLivros();
+                        break;
+                    case 3:
+                        listarAutores();
+                        break;
+                    case 4:
+                        listaAutoresVivosEmAno();
+                        break;
+                    case 5:
+                        listarLivrosEmIdioma();
+                        break;
+                    case 6:
+                        listarQuantidadeDeLivrosPorIdioma();
+                        break;
+                    case 7:
+                        apagar();
+                        break;
+                    default:
+                        break;
+                }
+            } while (opcao != 0);
+
+        } catch (InputMismatchException e){
+            System.out.println("Opção inválida");
             leitura.nextLine();
-
-            switch (opcao){
-                case 0:
-                    System.out.println("Até mais!");
-                    break;
-                case 1:
-                    buscarLivro();
-                    break;
-                case 2:
-                    listarLivros();
-                    break;
-                case 3:
-                    listarAutores();
-                    break;
-                case 4:
-                    listaAutoresVivosEmAno();
-                    break;
-                case 5:
-                    listarLivrosEmIdioma();
-                    break;
-                case 6:
-                    listarQuantidadeDeLivrosPorIdioma();
-                    break;
-                case 7:
-                    apagar();
-                    break;
-                default:
-                    break;
-            }
-
-        } while (opcao != 0);
+        }
 
     }
-
 
     // Excluir
     private void apagar(){
@@ -91,8 +97,8 @@ public class Principal {
 
     private List<Livro> getDados(String endereco){
         var json = consumoAPI.obterDados(endereco);
+        System.out.println(json);
 
-        // REFATORAR !!!
         DadosGutendex dados = converteDados.obterDados(json, DadosGutendex.class);
         return dados.listaDeLivros().stream()
                 .map(l -> new Livro(l, autorRepository))
@@ -102,32 +108,45 @@ public class Principal {
     private void buscarLivro() {
         System.out.println("Digite um trecho do livro ou do autor desejado: ");
         var busca = leitura.nextLine();
-        var endereco = BASE_URL + "search=" + busca.replace(" ", "%20");
+        var endereco = BASE_URL + "search=" + busca.replace(" ", "%20").strip();
 
         List<Livro> livrosBuscados = getDados(endereco);
 
-        System.out.println("Resultados: ");
-        livrosBuscados.forEach(System.out::println);
+        if (livrosBuscados.isEmpty()){
+            System.out.println("Desculpe! Não houve resultados para a busca");
+        }else {
+            System.out.println("Resultados: ");
+            livrosBuscados.forEach(System.out::println);
 
-        // E se não encontrar o livro?
-        System.out.println("Digite o código do livro desejado: ");
-        var codigo = leitura.nextInt();
-        leitura.nextLine();
+            try {
+                System.out.println("Digite o código do livro desejado: (Caso o livro não esteja na lista, digite 0)");
+                var codigo = leitura.nextInt();
+                leitura.nextLine();
 
-        Livro livro = livrosBuscados.stream()
-                .filter(l -> l.getId()==codigo)
-                .findFirst()
-                .orElse(null);
+                if (codigo == 0){
+                    System.out.println("Desculpe! Tente redefinir a busca");
+                }else {
+                    Livro livro = livrosBuscados.stream()
+                            .filter(l -> l.getId() == codigo)
+                            .findFirst()
+                            .orElse(null);
 
-        // E se for null?
-        if (livro == null) {
-            System.out.println("Livro não encontrado.");
-        } else {
-            autorRepository.save(livro.getAutor());
-            livroRepository.save(livro);
-            System.out.println("Livro salvo com sucesso.");
+                    if (livro == null) {
+                        System.out.println(
+                                "Não foi encontrado um livro com o código informado, verifique o código"
+                        );
+                    } else {
+                        autorRepository.save(livro.getAutor());
+                        livroRepository.save(livro);
+                        System.out.println("Livro salvo com sucesso.");
+                    }
+                }
+            }catch (InputMismatchException e){
+                System.out.println("Desculpe! Código inválido");
+                leitura.nextLine();
+            }
+
         }
-
     }
 
     private void listarLivros() {
@@ -141,17 +160,23 @@ public class Principal {
     }
 
     private void listaAutoresVivosEmAno(){
-        System.out.println("Digite o ano desejado: ");
-        var ano = leitura.nextInt();
-        leitura.nextLine();
+        try {
+            System.out.println("Digite o ano desejado: ");
+            var ano = leitura.nextInt();
+            leitura.nextLine();
 
-        List<Autor> autorList = autorRepository.findAutoresVivosEmAno(ano);
-        autorList.forEach(System.out::println);
+            List<Autor> autorList = autorRepository.findAutoresVivosEmAno(ano);
+            autorList.forEach(System.out::println);
+            if (autorList.isEmpty()) System.out.println("Sem resultados");
+        }catch (InputMismatchException e){
+            System.out.println("Desculpe! É necessário informar um ano");
+            leitura.nextLine();
+        }
     }
 
     private void listarLivrosEmIdioma(){
         String idiomas = """
-                
+          
                 en - inglês
                 pt - português
                 """;
@@ -162,6 +187,7 @@ public class Principal {
 
         List<Livro> livrosEmIdioma = livroRepository.findLivrosEmIdioma(idioma);
         livrosEmIdioma.forEach(System.out::println);
+        if (livrosEmIdioma.isEmpty()) System.out.println("Sem resultados");
     }
 
     private void listarQuantidadeDeLivrosPorIdioma(){

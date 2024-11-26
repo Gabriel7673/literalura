@@ -27,14 +27,21 @@ public class Livro {
         this.id = dadosLivro.id();
         this.titulo = dadosLivro.titulo();
 
-        Optional<Autor> autorExistente = autorRepository.findByNome(dadosLivro.autor().get(0).nome());
 
-        if (autorExistente.isPresent()) {
-            this.autor = autorExistente.get();
-            //this.autor.addLivro(dadosLivro);
-        } else {
-            this.autor = new Autor(dadosLivro.autor().get(0));
+        try{
+            Optional<Autor> autorExistente = autorRepository.findByNome(dadosLivro.autor().get(0).nome());
+            if (autorExistente.isPresent()) {
+                this.autor = autorExistente.get();
+                //this.autor.addLivro(dadosLivro);
+            } else {
+                this.autor = new Autor(dadosLivro.autor().get(0));
+            }
+        } catch (IndexOutOfBoundsException e) {
+            this.autor = new Autor("Sem nome", 0, 0);
         }
+
+
+
 
         this.idioma = dadosLivro.idioma().get(0);
         this.numeroDeDownloads = dadosLivro.numeroDeDownloads();

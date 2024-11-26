@@ -26,12 +26,15 @@ public class Autor {
     public Autor(){}
 
     public Autor(DadosAutor dadosAutor){
-    //public Autor(DadosAutor dadosAutor){
         this.nome = dadosAutor.nome();
         this.anoNascimento = dadosAutor.anoNascimento();
         this.anoFalecimento = dadosAutor.anoFalecimento();
+    }
 
-
+    public Autor(String nome, int anoNascimento, int anoFalecimento) {
+        this.nome = nome;
+        this.anoNascimento = anoNascimento;
+        this.anoFalecimento = anoFalecimento;
     }
 //
 //    public void addLivro(Livro livro){
