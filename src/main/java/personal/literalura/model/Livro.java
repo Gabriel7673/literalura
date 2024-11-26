@@ -15,10 +15,12 @@ public class Livro {
     private String titulo;
 
     //@OneToOne(mappedBy = "autores", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "autor_id")
     private Autor autor;
-    private String idioma; // Fazer Enum?
+
+    @Enumerated(EnumType.STRING)
+    private Idioma idioma;
     private Integer numeroDeDownloads;
 
     public Livro(){}
@@ -41,9 +43,13 @@ public class Livro {
         }
 
 
+        if (dadosLivro.idioma().get(0).length() == 2){
+            this.idioma = Idioma.fromAbreviacao(dadosLivro.idioma().get(0));
+        }else {
+            this.idioma = Idioma.fromIdioma(dadosLivro.idioma().get(0));
+        }
 
 
-        this.idioma = dadosLivro.idioma().get(0);
         this.numeroDeDownloads = dadosLivro.numeroDeDownloads();
     }
 

@@ -3,6 +3,7 @@ package personal.literalura.principal;
 import org.springframework.beans.factory.annotation.Autowired;
 import personal.literalura.model.Autor;
 import personal.literalura.model.DadosGutendex;
+import personal.literalura.model.Idioma;
 import personal.literalura.model.Livro;
 import personal.literalura.repository.AutorRepository;
 import personal.literalura.repository.LivroRepository;
@@ -74,9 +75,6 @@ public class Principal {
                     case 6:
                         listarQuantidadeDeLivrosPorIdioma();
                         break;
-                    case 7:
-                        apagar();
-                        break;
                     default:
                         break;
                 }
@@ -87,12 +85,6 @@ public class Principal {
             leitura.nextLine();
         }
 
-    }
-
-    // Excluir
-    private void apagar(){
-        autorRepository.deleteAll();
-        livroRepository.deleteAll();
     }
 
     private List<Livro> getDados(String endereco){
@@ -150,13 +142,17 @@ public class Principal {
     }
 
     private void listarLivros() {
+        System.out.println("\nLivros Resistrados: ");
         List<Livro> livros = livroRepository.findAll();
         livros.forEach(System.out::println);
+        if (livros.isEmpty()) System.out.println("Sem resultados");
     }
 
     private void listarAutores(){
+        System.out.println("\nAutores Resistrados: ");
         List<Autor> autores = autorRepository.findAll();
         autores.forEach(System.out::println);
+        if (autores.isEmpty()) System.out.println("Sem resultados");
     }
 
     private void listaAutoresVivosEmAno(){
@@ -165,6 +161,7 @@ public class Principal {
             var ano = leitura.nextInt();
             leitura.nextLine();
 
+            System.out.printf("\nAutores vivos em %d: \n", ano);
             List<Autor> autorList = autorRepository.findAutoresVivosEmAno(ano);
             autorList.forEach(System.out::println);
             if (autorList.isEmpty()) System.out.println("Sem resultados");
@@ -179,12 +176,23 @@ public class Principal {
           
                 en - inglês
                 pt - português
+                fr - francês
+                it - italiano
+                es - espanhol
                 """;
 
         System.out.println(idiomas);
         System.out.println("Digite o idioma desejado: ");
-        var idioma = leitura.nextLine();
+        var idiomaLido = leitura.nextLine();
 
+        Idioma idioma;
+        if (idiomaLido.length() == 2){
+            idioma = Idioma.fromAbreviacao(idiomaLido);
+        }else{
+            idioma = Idioma.fromIdioma(idiomaLido);
+        }
+
+        System.out.printf("\nLivros em %s: \n", idiomaLido);
         List<Livro> livrosEmIdioma = livroRepository.findLivrosEmIdioma(idioma);
         livrosEmIdioma.forEach(System.out::println);
         if (livrosEmIdioma.isEmpty()) System.out.println("Sem resultados");
@@ -193,7 +201,7 @@ public class Principal {
     private void listarQuantidadeDeLivrosPorIdioma(){
         List<Object[]> list = livroRepository.findQuantidadeDeLivrosPorIdioma();
         list.forEach(arr -> {
-            String idioma = (String) arr[0];
+            Idioma idioma = (Idioma) arr[0];
             Long quantidade = (Long) arr[1];
             System.out.println("Idioma: " + idioma + ", Quantidade: " + quantidade);
         });

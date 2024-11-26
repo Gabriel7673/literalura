@@ -48,7 +48,7 @@ public class Autor {
         return  nome +
                 " (" + anoNascimento +
                 "-" + anoFalecimento +
-                ") \n" + "Livros: " +
-                lista;
+                ") ";/* + "Livros: " +
+                lista;*/
     }
 }
