@@ -1,6 +1,5 @@
 package personal.literalura.principal;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import personal.literalura.model.Autor;
 import personal.literalura.model.DadosGutendex;
 import personal.literalura.model.Idioma;
@@ -15,8 +14,7 @@ import java.util.stream.Collectors;
 
 public class Principal {
 
-    private final String BASE_URL = "https://gutendex.com/books?";
-    //private final String BASE_URL = "https://gutendex.com/books?search=";
+    private final String BASE_URL = "https://gutendex.com/books?search=";
     private Scanner leitura = new Scanner(System.in);
     private ConsumoAPI consumoAPI = new ConsumoAPI();
     private ConverteDados converteDados = new ConverteDados();
@@ -43,7 +41,6 @@ public class Principal {
                 4) Listar autores vivos em dado ano
                 5) Listar livros em um dado idioma
                 6) Listar quantidade de livros por idioma
-                7) Zerar
                 0) Sair
                 Opção: """;
 
@@ -76,6 +73,7 @@ public class Principal {
                         listarQuantidadeDeLivrosPorIdioma();
                         break;
                     default:
+                        System.out.println("Opção inválida");
                         break;
                 }
             } while (opcao != 0);
@@ -89,7 +87,6 @@ public class Principal {
 
     private List<Livro> getDados(String endereco){
         var json = consumoAPI.obterDados(endereco);
-        System.out.println(json);
 
         DadosGutendex dados = converteDados.obterDados(json, DadosGutendex.class);
         return dados.listaDeLivros().stream()
@@ -100,7 +97,7 @@ public class Principal {
     private void buscarLivro() {
         System.out.println("Digite um trecho do livro ou do autor desejado: ");
         var busca = leitura.nextLine();
-        var endereco = BASE_URL + "search=" + busca.replace(" ", "%20").strip();
+        var endereco = BASE_URL + busca.replace(" ", "%20").strip();
 
         List<Livro> livrosBuscados = getDados(endereco);
 
@@ -144,15 +141,13 @@ public class Principal {
     private void listarLivros() {
         System.out.println("\nLivros Resistrados: ");
         List<Livro> livros = livroRepository.findAll();
-        livros.forEach(System.out::println);
-        if (livros.isEmpty()) System.out.println("Sem resultados");
+        imprimirLista(livros);
     }
 
     private void listarAutores(){
         System.out.println("\nAutores Resistrados: ");
         List<Autor> autores = autorRepository.findAll();
-        autores.forEach(System.out::println);
-        if (autores.isEmpty()) System.out.println("Sem resultados");
+        imprimirLista(autores);
     }
 
     private void listaAutoresVivosEmAno(){
@@ -163,8 +158,7 @@ public class Principal {
 
             System.out.printf("\nAutores vivos em %d: \n", ano);
             List<Autor> autorList = autorRepository.findAutoresVivosEmAno(ano);
-            autorList.forEach(System.out::println);
-            if (autorList.isEmpty()) System.out.println("Sem resultados");
+            imprimirLista(autorList);
         }catch (InputMismatchException e){
             System.out.println("Desculpe! É necessário informar um ano");
             leitura.nextLine();
@@ -186,16 +180,20 @@ public class Principal {
         var idiomaLido = leitura.nextLine();
 
         Idioma idioma;
+
         if (idiomaLido.length() == 2){
             idioma = Idioma.fromAbreviacao(idiomaLido);
         }else{
             idioma = Idioma.fromIdioma(idiomaLido);
         }
 
-        System.out.printf("\nLivros em %s: \n", idiomaLido);
-        List<Livro> livrosEmIdioma = livroRepository.findLivrosEmIdioma(idioma);
-        livrosEmIdioma.forEach(System.out::println);
-        if (livrosEmIdioma.isEmpty()) System.out.println("Sem resultados");
+        if (idioma == Idioma.N0){
+            System.out.println("Idioma inválido");
+        }else {
+            System.out.printf("\nLivros em %s: \n", idioma);
+            List<Livro> livrosEmIdioma = livroRepository.findLivrosEmIdioma(idioma);
+            imprimirLista(livrosEmIdioma);
+        }
     }
 
     private void listarQuantidadeDeLivrosPorIdioma(){
@@ -205,5 +203,10 @@ public class Principal {
             Long quantidade = (Long) arr[1];
             System.out.println("Idioma: " + idioma + ", Quantidade: " + quantidade);
         });
+    }
+
+    private void imprimirLista(List lista){
+        lista.forEach(System.out::println);
+        if (lista.isEmpty()) System.out.println("Sem resultados");
     }
 }

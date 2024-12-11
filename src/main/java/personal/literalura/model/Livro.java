@@ -14,7 +14,6 @@ public class Livro {
     private Long id;
     private String titulo;
 
-    //@OneToOne(mappedBy = "autores", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "autor_id")
     private Autor autor;

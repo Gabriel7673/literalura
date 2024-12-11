@@ -6,7 +6,6 @@ import personal.literalura.model.Idioma;
 import personal.literalura.model.Livro;
 
 import java.util.List;
-import java.util.Map;
 
 public interface LivroRepository extends JpaRepository<Livro, Long> {
 
@@ -14,6 +13,5 @@ public interface LivroRepository extends JpaRepository<Livro, Long> {
     List<Livro> findLivrosEmIdioma(Idioma idioma);
 
     @Query("SELECT l.idioma, COUNT(l) FROM Livro l GROUP BY l.idioma")
-    //Map<String, Integer> f();
     List<Object[]> findQuantidadeDeLivrosPorIdioma();
 }
