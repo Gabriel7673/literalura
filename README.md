@@ -7,6 +7,9 @@ O objetivo é realizar montar um banco de dados com livros e autores obtidos de 
 
 A API utilizada é a [Gutendex](https://gutendex.com/)
 
+## Requisitos
+Ter o Java instalado
+
 ## Funcionalidades
 - `Funcionalidade 1`: Pesquisar e cadastrar um livro, junto de seu autor, no banco de dados;
 - `Funcionalidade 2`: Listar todos os livros cadastrados;
@@ -21,3 +24,7 @@ A API utilizada é a [Gutendex](https://gutendex.com/)
 - `Intellij IDEA`
 - `PostgreSQL`
 - `JPA`
+
+## Como usar
+- Baixe o arquivo .jar disponibilizado na Release
+- Execute o comando: java -jar "arquivo".jar
